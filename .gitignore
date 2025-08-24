@@ -1,4 +1,10 @@
 *.csv
-old-version-results/
 *.png
 __pycache__/
+
+# Generated folders and files
+old-version-result/
+ECM_Plots/
+ECM_Params_Estimation/
+DRT_Comparison/
+

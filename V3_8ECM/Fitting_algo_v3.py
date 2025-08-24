@@ -15,6 +15,7 @@ INITIAL_GUESS = {
     "v3CM6":[0.005, 0.01, 0.01, 0.05, 0.9, 0.1, 0.9, 0.001], # v3CM6: R0, R1, R2, C1, n1, C2, n2, Aw
     "v3CM7":[0.005, 0.005, 0.01, 0.01, 0.05, 0.9, 0.1, 0.9, 0.005, 0.9, 0.001], # v3CM7: R0, R1, R2, R3, C1, n1, C2, n2, C3, n3, Aw
     "v3CM8":[0.005, 0.005, 0.01, 0.01, 0.01, 0.05, 0.9, 0.1, 0.9, 0.5, 0.9, 0.005, 0.9, 0.001], # v3CM8: R0, R1, R2, R3, R4, C1, n1, C2, n2, C3, n3, C4, n4, Aw
+    "v3CM9":[0.005, 0.005, 0.01, 0.01, 0.05, 0.9, 0.1, 0.9, 0.5, 0.9, 0.001], # v3CM9: R0, R1, R2, R3, C1, n1, C2, n2, C3, n3, Aw
 }
 
 # predefined ECM Parameter Names Mapping
@@ -27,6 +28,7 @@ PARAMS_NAMES = {
     "v3CM6": ["R0", "R1", "R2", "C1", "n1", "C2", "n2", "Aw"], # v3CM6: R0, R1, R2, C1, n1, C2, n2, Aw
     "v3CM7": ["R0", "R1", "R2", "R3", "C1", "n1", "C2", "n2", "C3", "n3", "Aw"], # v3CM7: R0, R1, R2, R3, C1, n1, C2, n2, C3, n3, Aw
     "v3CM8": ["R0", "R1", "R2", "R3", "R4", "C1", "n1", "C2", "n2", "C3", "n3", "C4", "n4", "Aw"], # v3CM8: R0, R1, R2, R3, R4, C1, n1, C2, n2, C3, n3, C4, n4, Aw
+    "v3CM9": ["R0", "R1", "R2", "R3", "C1", "n1", "C2", "n2", "C3", "n3", "Aw"], # v3CM9: R0, R1, R2, R3, C1, n1, C2, n2, C3, n3, Aw
 }
 
 # Bounds Mapping
@@ -40,13 +42,24 @@ BOUNDS = {
     "v3CM6": [(eps, 100), (eps, 100), (eps, 100), (eps, 100), (0.8, 1), (eps, 100), (0.8, 1), (eps, 100)], # v3CM6: R0, R1, R2, C1, n1, C2, n2, Aw
     "v3CM7": [(eps, 100), (eps, 100), (eps, 100), (eps, 100), (eps, 100), (0.8, 1), (eps, 100), (0.8, 1), (eps, 100), (0.8, 1), (eps, 100)], # v3CM7: R0, R1, R2, R3, C1, n1, C2, n2, C3, n3, Aw
     "v3CM8": [(eps, 100), (eps, 100), (eps, 100), (eps, 100), (eps, 100), (eps, 100), (0.8, 1), (eps, 100), (0.8, 1), (eps, 100), (0.8, 1), (eps, 100), (0.8, 1), (eps, 100)], # v3CM8: R0, R1, R2, R3, R4, C1, n1, C2, n2, C3, n3, C4, n4, Aw
+    "v3CM9": [(eps, 100), (eps, 100), (eps, 100), (eps, 100), (eps, 100), (0.8, 1), (eps, 100), (0.8, 1), (eps, 100), (0.8, 1), (eps, 100)], # v3CM9: R0, R1, R2, R3, C1, n1, C2, n2, C3, n3, Aw
 }
 
-ECM_NAMES = ["v3CM1","v3CM2","v3CM3","v3CM4","v3CM5","v3CM6", "v3CM7", "v3CM8"]
+ECM_NAMES = ["v3CM1","v3CM2","v3CM3","v3CM4","v3CM5","v3CM6", "v3CM7", "v3CM8", "v3CM9"]
 ECM_IMPEDANCE_FUNCS = [compute_v3CM1_impedance, compute_v3CM2_impedance, compute_v3CM3_impedance, compute_v3CM4_impedance,
-                       compute_v3CM5_impedance, compute_v3CM6_impedance, compute_v3CM7_impedance, compute_v3CM8_impedance,]
+                       compute_v3CM5_impedance, compute_v3CM6_impedance, compute_v3CM7_impedance, compute_v3CM8_impedance, compute_v3CM9_impedance,]
 
-
+ECM_NUM_RCS = {
+    "v3CM1": 1,
+    "v3CM2": 2,
+    "v3CM3": 3,
+    "v3CM4": 4,
+    "v3CM5": 0,
+    "v3CM6": 1,
+    "v3CM7": 2,
+    "v3CM8": 3,
+    "v3CM9": 3
+}
 
 
 # Define Nonlinear Constrained Optimization (TC) ECM estimation
@@ -78,6 +91,7 @@ def time_constant_constraints(params, ECM_name):
         R0_val, R1_val, R2_val, R3_val, R4_val, C1_val, n1_val, C2_val, n2_val, C3_val, n3_val, C4_val, n4_val, sigma_val = params
         return [compute_time_constant(R2_val, C2_val, n2_val) - compute_time_constant(R1_val, C1_val, n1_val),
                 compute_time_constant(R3_val, C3_val, n3_val) - compute_time_constant(R2_val, C2_val, n2_val)]
+    #TODO: CM9
     elif ECM_name not in ECM_NAMES:
         raise ValueError(f"Unknown ECM name: {ECM_name}. Cannot define time constant constraints.")
     else:
@@ -96,6 +110,27 @@ def cost_RMSE_abs(params, Z_exp, angular_freq, impedance_func):
     normalized_rmse_abs = rmse_abs / max_Zexp
     return normalized_rmse_abs
 
+# def cost_RMSE_abs(params, Z_exp, angular_freq, impedance_func):
+#     Z_model = impedance_func(params, angular_freq)
+#     error = np.abs(Z_model - Z_exp)
+#     rmse_abs =  np.sqrt(np.mean(error **2))
+    
+#     max_Zexp = np.max(np.abs(Z_exp)) # max Z magnitude
+#     normalized_rmse_abs = rmse_abs / max_Zexp 
+
+#     # regularization (#C8 only)
+#     # R0, R1, R2, R3, R4, C1, n1, C2, n2, C3, n3, C4, n4, Aw
+#     tau1 = compute_time_constant(params[1], params[5], params[6])
+#     tau2 = compute_time_constant(params[2], params[7], params[8])
+#     tau3 = compute_time_constant(params[3], params[9], params[10])
+
+#     # Regularization to enforce tau1 < tau2 < tau3
+#     penalty12 = np.maximum(0, tau1 - tau2)
+#     penalty23 = np.maximum(0, tau2 - tau3)
+
+#     return normalized_rmse_abs + 0 * (penalty12 + penalty23)
+
+ 
 # Normalized mean
 def cost_RMSE_rel(params, Z_exp, angular_freq, impedance_func, epsilon=1e-8):
     Z_model = impedance_func(params, angular_freq)
@@ -110,9 +145,40 @@ def cost_RMSE_rel(params, Z_exp, angular_freq, impedance_func, epsilon=1e-8):
     return normalized_rmsre_rel
 
 
+def cost_R2_flatten(params, Z_exp, angular_freq, impedance_func):
+    # Z is complex number, so flatten it into real and imaginary part
+    Z_model = impedance_func(params, angular_freq)
+    # Flatten real and imaginary parts into one vector
+    Z_exp_combined = np.concatenate([Z_exp.real, Z_exp.imag])
+    Z_model_combined = np.concatenate([Z_model.real, Z_model.imag])
+
+    rss = np.sum((Z_exp_combined - Z_model_combined) ** 2)
+    exp_mean = np.mean(Z_exp_combined)
+    tss = np.sum((Z_exp_combined - exp_mean) ** 2)
+    return 1 - (rss / tss)
+
+
+def cost_R2_magnitude(params, Z_exp, angular_freq, impedance_func):
+    # Compute model impedance
+    Z_model = impedance_func(params, angular_freq)
+    
+    # Magnitudes
+    Z_exp_mag = np.abs(Z_exp)
+    Z_model_mag = np.abs(Z_model)
+    
+    # R2 calculation
+    rss = np.sum((Z_exp_mag - Z_model_mag) ** 2)
+    exp_mean = np.mean(Z_exp_mag)
+    tss = np.sum((Z_exp_mag - exp_mean) ** 2)
+    
+    return 1 - (rss / tss)
+
+
 COST_FUNCTION_MAP = {
     "RMSE_abs": cost_RMSE_abs,
-    "RMSE_rel": cost_RMSE_rel
+    "RMSE_rel": cost_RMSE_rel,
+    "R2_flatten": cost_R2_flatten,
+    "R2_magnitude": cost_R2_magnitude,
 }
 
 def compute_time_constant(R, Q, n):
@@ -227,6 +293,27 @@ def sort_by_tau(params, ECM_name):
         n1_val, n2_val, n3_val = sorted_n
 
         params = [R0_val, R1_val, R2_val, R3_val, R4_val, C1_val, n1_val, C2_val, n2_val, C3_val, n3_val, C4_val, n4_val, sigma_val]
+        params = [float(v) for v in params]
+    
+    elif ECM_name == "v3CM9":
+        R0_val, R1_val, R2_val, R3_val, C1_val, n1_val, C2_val, n2_val, C3_val, n3_val, sigma_val = params
+
+        RC_products = [compute_time_constant(R1_val, C1_val, n1_val), compute_time_constant(R2_val, C2_val, n2_val), compute_time_constant(R3_val, C3_val, n3_val)]
+        sorted_indices = sorted(range(3), key=lambda i: RC_products[i])
+
+        R_vals = [R1_val, R2_val, R3_val]
+        C_vals = [C1_val, C2_val, C3_val]
+        n_vals = [n1_val, n2_val, n3_val]
+
+        sorted_R = [R_vals[i] for i in sorted_indices]
+        sorted_C = [C_vals[i] for i in sorted_indices]
+        sorted_n = [n_vals[i] for i in sorted_indices]
+
+        R1_val, R2_val, R3_val = sorted_R
+        C1_val, C2_val, C3_val = sorted_C
+        n1_val, n2_val, n3_val = sorted_n
+
+        params = [R0_val, R1_val, R2_val, R3_val, C1_val, n1_val, C2_val, n2_val, C3_val, n3_val, sigma_val]
         params = [float(v) for v in params]
     
     return params
@@ -844,15 +931,15 @@ def ECM_result_wrapper_new(Z_exp, angular_freq, ECM_candidate_name, ECM_candidat
         if opt_result.success:
             # Record only successful trial
             all_costs = evaluate_all_costs(params_perturbed, Z_exp, angular_freq, ECM_candidate_impedance_func)
-            err_str = " | ".join(
-                f"{name}: {val:.5e}" if isinstance(val, (float, int)) else f"{name}: {val}"
-                for name, val in all_costs.items()
-            )
+            # err_str = " | ".join(
+            #     f"{name}: {val:.5e}" if isinstance(val, (float, int)) else f"{name}: {val}"
+            #     for name, val in all_costs.items()
+            # )
             trial_results.append({
                 'trial_id': trial_id,
                 'initial_guess': perturbed_guess,
                 'estimated_params': params_perturbed,
-                'errors': err_str
+                **all_costs   # merge cost metrics into the same dict
             })
             # Update best parameters if necessary
             if err_perturbed < best_err:
@@ -865,7 +952,7 @@ def ECM_result_wrapper_new(Z_exp, angular_freq, ECM_candidate_name, ECM_candidat
 
     print("Best Trial ID:", best_trial_id,"; Estimation Err:", best_err, "; Best Estimation Params:", best_params)
     all_costs = evaluate_all_costs(best_params, Z_exp, angular_freq, ECM_candidate_impedance_func)
-    err_str = " | ".join(
+    best_err_str = " | ".join(
         f"{name}: {val:.5e}" if isinstance(val, (float, int)) else f"{name}: {val}"
         for name, val in all_costs.items()
     )
@@ -873,7 +960,7 @@ def ECM_result_wrapper_new(Z_exp, angular_freq, ECM_candidate_name, ECM_candidat
     for trial in trial_results:
         trial['is_best'] = (trial['trial_id'] == best_trial_id)
     
-    return best_params, best_err, err_str, trial_results
+    return best_params, best_err, best_err_str, trial_results
 
 # Version 3: compare Powell and L-BFGS-B algorithm and find the best fitting ECM & its cost, second best-fitting ECM & its cost, third best-fitting ECM & its cost
 # Return a list of tuples: [top1=("Fitting Algo", "ECM_name", cost, [list of params estimation]), top2=(...), top3=(...)]
