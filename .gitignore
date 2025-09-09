@@ -1,5 +1,4 @@
 *.csv
-*.png
 __pycache__/
 
 # Generated folders and files
